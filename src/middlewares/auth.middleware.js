@@ -1,39 +1,53 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
+import jwt from "jsonwebtoken";
+import { PERMISSIONS, ROLES } from "../constants/roles.constant.js";
 
-export const verifyJWT = asyncHandler(async(req, _, next) => {
+
+//  Verify JWT (Login Check)
+
+const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
-        // --- STEP 1: Token Nikalo ---
-        // Token ya to Cookies mein hoga, ya Header mein (Mobile Apps ke liye)
-        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
         
-        // Agar token nahi mila, matlab banda logged out hai
         if (!token) {
-            throw new ApiError(401, "Unauthorized request")
+            throw new ApiError(401, "Unauthorized request");
         }
     
-        // --- STEP 2: Token Verify Karo ---
-        // Secret key se check karo ki ye token humne hi diya hai ya kisi ne nakli banaya hai
-        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     
-        // --- STEP 3: User Dhundo ---
-        // Token sahi hai, ab DB se user nikaalo (Password mat lana)
-        const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
+        const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
     
         if (!user) {
-            throw new ApiError(401, "Invalid Access Token")
+            throw new ApiError(401, "Invalid Access Token");
         }
     
-        // --- STEP 4: Request mein User Jod Do ---
-        // Ye sabse important line hai!
-        // Ab aage ke controllers ko pata chal jayega ki 'req.user' kaun hai.
         req.user = user;
-        next()
-
+        next();
     } catch (error) {
-        throw new ApiError(401, error?.message || "Invalid access token")
+        throw new ApiError(401, error?.message || "Invalid access token");
     }
-    
-})
+});
+
+//  Verify Admin (Sirf 'admin' allow karega) 
+
+const verifyAdmin = asyncHandler(async (req, res, next) => {
+    // req.user verifyJWT se aa raha hai
+    if (req.user.role !== ROLES.ADMIN) { 
+        throw new ApiError(403, "Access Denied! Admin rights required.");
+    }
+    next();
+});
+
+//  Verify Publisher (Admin + Editor allow karega)
+
+const verifyPublisher = asyncHandler(async (req, res, next) => {
+    // Check karega: Kya user ka role 'CAN_PUBLISH' list mein hai?
+    if (!PERMISSIONS.CAN_PUBLISH.includes(req.user.role)) {
+        throw new ApiError(403, "Access Denied! You cannot publish articles.");
+    }
+    next();
+});
+
+export { verifyJWT, verifyAdmin, verifyPublisher };
