@@ -11,17 +11,8 @@ import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-
-
-
 router.route("/").get(getAllArticles);
-
-
 router.route("/:slug").get(getArticleBySlug);
-
-
-
-
 
 router.route("/").post(
     verifyJWT, 
@@ -29,13 +20,11 @@ router.route("/").post(
     createArticle
 );
 
-
 router.route("/:articleId").patch(
     verifyJWT, 
     upload.single("thumbnail"), 
     updateArticle
 );
-
 
 router.route("/:articleId").delete(
     verifyJWT, 

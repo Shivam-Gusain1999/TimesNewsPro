@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { ROLE_VALUES, ROLES } from "../constants/roles.constant.js"; // ✅ Roles import kiye
+import { ROLE_VALUES, ROLES } from "../constants/roles.constant.js"; 
 
 const userSchema = new Schema(
   {

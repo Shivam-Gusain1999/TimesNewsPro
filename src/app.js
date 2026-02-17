@@ -1,4 +1,6 @@
 // ------------------ External Packages ------------------
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger.js";
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
@@ -11,6 +13,7 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import userRouter from "./routes/user.routes.js";
 import categoryRouter from "./routes/category.routes.js";
 import articleRouter from "./routes/article.routes.js"
+import adminRouter from "./routes/admin.routes.js";
 
 const app = express();
 
@@ -29,9 +32,15 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // ------------------ Routes ------------------
+// Documentation Route
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// ... Iske neeche tumhare user aur admin routes hone chahiye
+
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/articles", articleRouter);
+app.use("/api/v1/admin", adminRouter);
 
 
 
